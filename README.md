@@ -1,2 +1,0 @@
-# XpartaMuPP
-XMPP Lobby Bot
