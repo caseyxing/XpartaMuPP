@@ -46,25 +46,25 @@ class LeaderboardList():
     """
     stats = {}
     player = db.query(Player).filter(Player.jid.ilike(str(JID)))
+
     if not player.first():
       return
-    if player.first().rating != -1:
-      stats['rating'] = str(player.first().rating)
 
-    if player.first().highest_rating != -1:
-      stats['highestRating'] = str(player.first().highest_rating)
+    queried_player = player.first()
+    playerID = queried_player.id
+    if queried_player.rating != -1:
+      stats['rating'] = str(queried_player.rating)
+      rank = db.query(Player).filter(Player.rating >= queried_player.rating).count()
+      stats['rank'] = str(rank+1)
 
-    playerID = player.first().id
-    players = db.query(Player).filter(Player.rating != -1).order_by(Player.rating.desc()).all()
+    if queried_player.highest_rating != -1:
+      stats['highestRating'] = str(queried_player.highest_rating)
 
-    for rank, user in enumerate(players):
-      if (user.jid.lower() == JID.lower()):
-        stats['rank'] = str(rank+1)
-        break
-
-    stats['totalGamesPlayed'] = str(db.query(PlayerInfo).filter_by(player_id=playerID).count())
-    stats['wins'] = str(db.query(Game).filter_by(winner_id=playerID).count())
-    stats['losses'] = str(db.query(PlayerInfo).filter_by(player_id=playerID).count() - db.query(Game).filter_by(winner_id=playerID).count())
+    gamesPlayed = db.query(PlayerInfo).filter_by(player_id=playerID).count()
+    wins = db.query(Game).filter_by(winner_id=playerID).count()
+    stats['totalGamesPlayed'] = str(gamesPlayed)
+    stats['wins'] = str(wins)
+    stats['losses'] = str(gamesPlayed - wins)
     return stats
 
   def getOrCreatePlayer(self, JID):
