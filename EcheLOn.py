@@ -74,7 +74,7 @@ class LeaderboardList():
       the Player model, or the one that already
       exists in the database.
     """
-    players = db.query(Player).filter_by(jid=str(JID))
+    players = db.query(Player).filter(Player.jid.ilike(str(JID)))
     if not players.first():
       player = Player(jid=str(JID), rating=-1)
       db.add(player)
@@ -88,7 +88,7 @@ class LeaderboardList():
       Returns the player that was removed, or None
       if that player didn't exist.
     """
-    players = db.query(Player).filter_by(jid=JID)
+    players = db.query(Player).filter(Player.jid.ilike(str(JID)))
     player = players.first()
     if not player:
       return None
