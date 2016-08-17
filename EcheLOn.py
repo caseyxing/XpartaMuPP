@@ -528,7 +528,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
       """
       Request lists.
       """
-      if 'boardlist' in iq.plugins:
+      if list(iq.plugins.items())[0][0][0] == 'boardlist':
         command = iq['boardlist']['command']
         recipient = iq['boardlist']['recipient']
         if command == 'getleaderboard':
@@ -545,7 +545,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
             traceback.print_exc()
         else:
           logging.error("Failed to process boardlist request from %s" % iq['from'].bare)
-      elif 'profile' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'profile':
         command = iq['profile']['command']
         recipient = iq['profile']['recipient']
         try:
@@ -563,7 +563,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
       """
       pass
     elif iq['type'] == 'set':
-      if 'gamereport' in iq.plugins:
+      if list(iq.plugins.items())[0][0][0] == 'gamereport':
         """
         Client is reporting end of game statistics
         """
@@ -576,7 +576,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
         except:
           traceback.print_exc()
           logging.error("Failed to update game statistics for %s" % iq['from'].bare)
-      elif 'player' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'player':
         player = iq['player']['online']
         #try:
         self.leaderboard.getOrCreatePlayer(player)
