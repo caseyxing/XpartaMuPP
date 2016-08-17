@@ -278,20 +278,20 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       """
       # Send lists/register on leaderboard; depreciated once muc_online
       #  can send lists/register automatically on joining the room.
-      if 'gamelist' in iq.plugins:
+      if list(iq.plugins.items())[0][0][0] == 'gamelist':
         try:
           self.sendGameList(iq['from'])
         except:
           traceback.print_exc()
           logging.error("Failed to process gamelist request from %s" % iq['from'].bare)
-      elif 'boardlist' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'boardlist':
         command = iq['boardlist']['command']
         try:
           self.relayBoardListRequest(iq['from'])
         except:
           traceback.print_exc()
           logging.error("Failed to process leaderboardlist request from %s" % iq['from'].bare)
-      elif 'profile' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'profile':
         command = iq['profile']['command']
         try:
           self.relayProfileRequest(iq['from'], command)
@@ -303,17 +303,17 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       """
       Iq successfully received
       """
-      if 'boardlist' in iq.plugins:
+      if list(iq.plugins.items())[0][0][0] == 'boardlist':
         recipient = iq['boardlist']['recipient']
         self.relayBoardList(iq['boardlist'], recipient)
-      elif 'profile' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'profile':
         recipient = iq['profile']['recipient']
         player =  iq['profile']['command']
         self.relayProfile(iq['profile'], player, recipient)
       else:
         pass
     elif iq['type'] == 'set':
-      if 'gamelist' in iq.plugins:
+      if list(iq.plugins.items())[0][0][0] == 'gamelist':
         """
         Register-update / unregister a game
         """
@@ -345,7 +345,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             logging.error("Failed to process changestate data")
         else:
           logging.error("Failed to process command '%s' received from %s" % command, iq['from'].bare)
-      elif 'gamereport' in iq.plugins:
+      elif list(iq.plugins.items())[0][0][0] == 'gamereport':
         """
         Client is reporting end of game statistics
         """
