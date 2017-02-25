@@ -365,7 +365,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       If no target is passed the gamelist is broadcasted
         to all clients.
     """
-    start = time.time();
     games = self.gameList.getAllGames()
     
     stz = GameListXmppPlugin()
@@ -390,9 +389,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           iq.send(block=False, now=True)
         except:
           logging.error("Failed to send game list")
-        end = time.time()
-        print(str(time.time()) + "sendGameList all")
-        print(end - start)
     else:
       ## Check recipient exists
       if str(to) not in self.nicks:
@@ -405,9 +401,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         iq.send(block=False, now=True)
       except:
         logging.error("Failed to send game list")
-      end = time.time()
-      print(str(time.time()) + "sendGameList targeted")
-      print(end - start)
 
   def relayBoardListRequest(self, recipient):
     """
