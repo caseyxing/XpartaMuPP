@@ -388,7 +388,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         except:
           logging.error("Failed to send game list")
         end = time.time()
-        print("sendGameList targeted")
+        print(time.time() + "sendGameList targeted")
         print(end - start)
     else:
       ## Check recipient exists
@@ -414,7 +414,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       except:
         logging.error("Failed to send game list")
       end = time.time()
-      print("sendGameList all")
+      print(time.time() + "sendGameList all")
       print(end - start)
 
   def relayBoardListRequest(self, recipient):
