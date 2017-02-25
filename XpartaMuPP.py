@@ -367,20 +367,23 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     start = time.time();
     games = self.gameList.getAllGames()
+    
+    stz = GameListXmppPlugin()
+
+    ## Pull games and add each to the stanza        
+    for JIDs in games:
+      g = games[JIDs]
+      stz.addGame(g)
+
+    ## Set additional IQ attributes
+    iq = self.Iq()
+    iq['type'] = 'result'
+    iq.setPayload(stz)
+    
     if to == "":
       for JID in list(self.nicks):
-        stz = GameListXmppPlugin()
-
-        ## Pull games and add each to the stanza        
-        for JIDs in games:
-          g = games[JIDs]
-          stz.addGame(g)
-
-        ## Set additional IQ attributes
-        iq = self.Iq()
-        iq['type'] = 'result'
+        
         iq['to'] = JID
-        iq.setPayload(stz)
 
         ## Try sending the stanza
         try:
@@ -388,25 +391,14 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         except:
           logging.error("Failed to send game list")
         end = time.time()
-        print(time.time() + "sendGameList targeted")
+        print(str(time.time()) + "sendGameList all")
         print(end - start)
     else:
       ## Check recipient exists
       if str(to) not in self.nicks:
         logging.error("No player with the XmPP ID '%s' known to send gamelist to." % str(to))
         return
-      stz = GameListXmppPlugin()
-
-      ## Pull games and add each to the stanza
-      for JIDs in games:
-        g = games[JIDs]
-        stz.addGame(g)
-
-      ## Set additional IQ attributes
-      iq = self.Iq()
-      iq['type'] = 'result'
       iq['to'] = to
-      iq.setPayload(stz)
 
       ## Try sending the stanza
       try:
@@ -414,7 +406,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       except:
         logging.error("Failed to send game list")
       end = time.time()
-      print(time.time() + "sendGameList all")
+      print(str(time.time()) + "sendGameList targeted")
       print(end - start)
 
   def relayBoardListRequest(self, recipient):
