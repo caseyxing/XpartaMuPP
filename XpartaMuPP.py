@@ -413,6 +413,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         iq.send(block=False, now=True)
       except:
         logging.error("Failed to send game list")
+      end = time.time()
       print("sendGameList all")
       print(end - start)
 
