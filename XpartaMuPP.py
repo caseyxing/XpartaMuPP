@@ -389,7 +389,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           logging.error("Failed to send game list")
         end = time.time()
         print("sendGameList targeted")
-        print(start - end)
+        print(end - start)
     else:
       ## Check recipient exists
       if str(to) not in self.nicks:
@@ -414,7 +414,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       except:
         logging.error("Failed to send game list")
       print("sendGameList all")
-      print(start - end)
+      print(end - start)
 
   def relayBoardListRequest(self, recipient):
     """
