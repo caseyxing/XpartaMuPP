@@ -633,7 +633,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
-    for i in ratinglist:
+    for i in self.ratingListCache:
       stz.addItem(self.ratingListCache[i]['name'], self.ratingListCache[i]['rating'])
     stz.addCommand('ratinglist')
     iq.setPayload(stz)
