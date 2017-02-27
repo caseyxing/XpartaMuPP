@@ -447,6 +447,8 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     self.sjid = sjid
     self.room = room
     self.nick = nick
+    self.ratingListCache = {}
+    self.ratingCacheReload = False
 
     # Init leaderboard object
     self.leaderboard = LeaderboardList(room)
@@ -570,6 +572,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
         try:
           self.reportManager.addReport(iq['gamereport']['sender'], iq['gamereport']['game'])
           if self.leaderboard.getLastRatedMessage() != "":
+            self.ratingCacheReload = True
             self.send_message(mto=self.room, mbody=self.leaderboard.getLastRatedMessage(), mtype="groupchat",
               mnick=self.nick)
             self.sendRatingList(iq['from'])
@@ -617,13 +620,21 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     """
       Send the rating list.
     """
-    ## Pull rating list data and add it to the stanza  
-    ratinglist = self.leaderboard.getRatingList(self.nicks)
+    ## Pull rating list data and add it to the stanza 
+    if self.ratingCacheReload:
+      self.ratingListCache = self.leaderboard.getRatingList(self.nicks)
+      self.ratingCacheReload = False
+    else:
+      for JID in list(self.nicks):
+        if JID not in self.ratingListCache:
+          self.ratingListCache = self.leaderboard.getRatingList(self.nicks)
+          self.ratingCacheReload = False
+          break
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
     for i in ratinglist:
-      stz.addItem(ratinglist[i]['name'], ratinglist[i]['rating'])
+      stz.addItem(self.ratingListCache[i]['name'], self.ratingListCache[i]['rating'])
     stz.addCommand('ratinglist')
     iq.setPayload(stz)
     ## Check recipient exists
