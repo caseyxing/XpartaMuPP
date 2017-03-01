@@ -235,7 +235,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       # If it doesn't already exist, store player JID mapped to their nick.
       if str(presence['muc']['jid']) not in self.nicks:
         self.nicks[str(presence['muc']['jid'])] = presence['muc']['nick']
-        self.presences[str(presence['muc']['jid'])] = presence['muc']['show']
+        self.presences[str(presence['muc']['jid'])] = "available"
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
@@ -274,11 +274,11 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     Processes presence change
     """
-    if str(presence['muc']['jid']) in self.presences:
-      self.presences[str(presence['muc']['jid'])] = presence['muc']['show']
-      if presence['muc']['show'] == 'chat' or presence['muc']['show'] == 'away':
-        self.sendGameList(presence['muc']['jid'])
-        self.relayBoardListRequest(presence['muc']['jid'])    
+    if str(presence['from']) in self.presences:
+      self.presences[str(presence['from'])] = presence['type']
+      if presence[str(presence['from'])] == 'available' or presence[str(presence['from'])] == 'away':
+        self.sendGameList(presence['from'])
+        self.relayBoardListRequest(presence['from'])    
 
   def iqhandler(self, iq):
     """
@@ -400,7 +400,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     
     if to == "":
       for JID in list(self.presences):
-        if self.presences[JID] != "chat" or self.presences[JID] != "away":
+        if self.presences[JID] != "available" or self.presences[JID] != "away":
           continue
         iq['to'] = JID
 
@@ -543,7 +543,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     if to == "":  
       # Rating List
       for JID in list(self.presences):
-        if self.presences[JID] != "chat" or self.presences[JID] != "away":
+        if self.presences[JID] != "available" or self.presences[JID] != "away":
           continue
         ## Set additional IQ attributes
         iq['to'] = JID
