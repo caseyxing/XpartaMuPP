@@ -275,13 +275,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     Processes presence change
     """
     prefix = "%s/" % self.room
-    logging.error(prefix)
     nick = str(presence['from']).replace(prefix, "")
-    logging.error(nick)
-    logging.error(self.nicks)
     for JID in self.nicks:
       if self.nicks[JID] == nick:
-        logging.error(JID)
         self.presences[JID] = str(presence['type'])
         if self.presences[JID] == 'available' or self.presences[JID] == 'away':
           self.sendGameList(JID)
@@ -408,7 +404,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     iq.setPayload(stz)
     if to == "":
       for JID in list(self.presences):
-        if self.presences[JID] != "available" or self.presences[JID] != "away":
+        if self.presences[JID] != "available" and self.presences[JID] != "away":
           continue
         iq['to'] = JID
 
@@ -551,7 +547,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     if to == "":  
       # Rating List
       for JID in list(self.presences):
-        if self.presences[JID] != "available" or self.presences[JID] != "away":
+        if self.presences[JID] != "available" and self.presences[JID] != "away":
           continue
         ## Set additional IQ attributes
         iq['to'] = JID
