@@ -278,10 +278,10 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     nick = str(presence['from']).replace(prefix, "")
     for JID in self.nicks:
       if self.nicks[JID] == nick:
-        self.presences[JID] = str(presence['type'])
-        if self.presences[JID] == 'available' or self.presences[JID] == 'away':
+        if self.presences[JID] == 'busy' and (str(presence['type']) == "available" or str(presence['type']) == "away"):
           self.sendGameList(JID)
           self.relayBoardListRequest(JID)
+        self.presences[JID] = str(presence['type'])
         break
  
 
