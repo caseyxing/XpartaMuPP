@@ -178,6 +178,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
 
     # Store mapping of nicks and XmppIDs, attached via presence stanza
     self.nicks = {}
+    self.presences = {} # Obselete when XEP-0060 is implemented.
 
     self.lastLeft = ""
 
@@ -212,6 +213,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     self.add_event_handler("muc::%s::got_online" % self.room, self.muc_online)
     self.add_event_handler("muc::%s::got_offline" % self.room, self.muc_offline)
     self.add_event_handler("groupchat_message", self.muc_message)
+    self.add_event_handler("changed_status", self.presence_change)
 
   def start(self, event):
     """
@@ -233,6 +235,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       # If it doesn't already exist, store player JID mapped to their nick.
       if str(presence['muc']['jid']) not in self.nicks:
         self.nicks[str(presence['muc']['jid'])] = presence['muc']['nick']
+        self.presences[str(presence['muc']['jid'])] = presence['muc']['show']
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
@@ -254,6 +257,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       self.lastLeft = str(presence['muc']['jid'])
       if str(presence['muc']['jid']) in self.nicks:
         del self.nicks[str(presence['muc']['jid'])]
+        del self.presences[str(presence['muc']['jid'])]
     if presence['muc']['nick'] == self.ratingsBot:
       self.ratingsBotWarned = False
 
@@ -265,6 +269,16 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       self.send_message(mto=msg['from'].bare,
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
+
+  def presence_chance(self, presence):
+    """
+    Processes presence change
+    """
+    if str(presence['muc']['jid']) in self.presences:
+      self.presences[str(presence['muc']['jid'])] = presence['muc']['show']
+      if presence['muc']['jid'] == 'chat' or presence['muc']['jid'] == 'away':
+        self.sendGameList(presence['muc']['jid'])
+        self.relayBoardListRequest(presence['muc']['jid'])    
 
   def iqhandler(self, iq):
     """
@@ -344,7 +358,11 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             self.sendGameList()
           except:
             traceback.print_exc()
-            logging.error("Failed to process changestate data")
+            logging.error("Failed to process changestate data. Trying to add game")
+            try:
+              self.gameList.addGame(iq['from'], iq['gamelist']['game'])
+            except:
+              pass
         else:
           logging.error("Failed to process command '%s' received from %s" % command, iq['from'].bare)
       elif list(iq.plugins.items())[0][0][0] == 'gamereport':
@@ -380,8 +398,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     iq.setPayload(stz)
     
     if to == "":
-      for JID in list(self.nicks):
-        
+      for JID in list(self.presences):
+        if self.presences[JID] != "chat" or self.presences[JID] != "away":
+          continue
         iq['to'] = JID
 
         ## Try sending the stanza
@@ -518,14 +537,13 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     iq = self.Iq()
     iq['type'] = 'result'
-    """for i in board:
-      stz.addItem(board[i]['name'], board[i]['rating'])
-    stz.addCommand('boardlist')"""
     iq.setPayload(boardList)
     ## Check recipient exists
     if to == "":  
       # Rating List
-      for JID in list(self.nicks):
+      for JID in list(self.presences):
+        if self.presences[JID] != "chat" or self.presences[JID] != "away":
+          continue
         ## Set additional IQ attributes
         iq['to'] = JID
         ## Try sending the stanza
@@ -534,7 +552,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         except:
           logging.error("Failed to send rating list")
     else:
-      # Leaderboard
+      # Leaderboard or targeted rating list
       if str(to) not in self.nicks:
         logging.error("No player with the XmPP ID '%s' known to send boardlist to" % str(to))
         return
