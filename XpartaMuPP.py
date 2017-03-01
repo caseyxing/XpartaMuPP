@@ -274,13 +274,20 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     Processes presence change
     """
-    nick = str(presence['from']).replace("%s@conference.lobby.wildfiregames.com/" % self.room, "")
-    if nick in self.nicks:
-      JID = self.nicks[nick]
-      self.presences[JID] = str(presence['type'])
-      if presence[JID] == 'available' or presence[JID] == 'away':
-        self.sendGameList(JID)
-        self.relayBoardListRequest(JID)    
+    prefix = "%s/" % self.room
+    logging.error(prefix)
+    nick = str(presence['from']).replace(prefix, "")
+    logging.error(nick)
+    logging.error(self.nicks)
+    for JID in self.nicks:
+      if self.nicks[JID] == nick:
+        logging.error(JID)
+        self.presences[JID] = str(presence['type'])
+        if presence[JID] == 'available' or presence[JID] == 'away':
+          self.sendGameList(JID)
+          self.relayBoardListRequest(JID)
+        break
+ 
 
   def iqhandler(self, iq):
     """
