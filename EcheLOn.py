@@ -449,6 +449,8 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     self.nick = nick
     self.ratingListCache = {}
     self.ratingCacheReload = False
+    self.boardListCache = {}
+    self.boardCacheReload = False
 
     # Init leaderboard object
     self.leaderboard = LeaderboardList(room)
@@ -573,6 +575,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
           self.reportManager.addReport(iq['gamereport']['sender'], iq['gamereport']['game'])
           if self.leaderboard.getLastRatedMessage() != "":
             self.ratingCacheReload = True
+            self.boardCacheReload = True
             self.send_message(mto=self.room, mbody=self.leaderboard.getLastRatedMessage(), mtype="groupchat",
               mnick=self.nick)
             self.sendRatingList(iq['from'])
@@ -594,12 +597,15 @@ class EcheLOn(sleekxmpp.ClientXMPP):
       If no target is passed the boardlist is broadcasted
         to all clients.
     """
-    ## Pull leaderboard data and add it to the stanza  
-    board = self.leaderboard.getBoard()
+    ## Pull board list data and add it to the stanza 
+    if self.boardCacheReload:
+      self.boardListCache = self.leaderboard.getBoard()
+      self.boardCacheReload = False
+    ## Pull leaderboard data and add it to the stanza
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
-    for i in board:
+    for i in boardListCache:
       stz.addItem(board[i]['name'], board[i]['rating'])
     stz.addCommand('boardlist')
     stz.addRecipient(recipient)
