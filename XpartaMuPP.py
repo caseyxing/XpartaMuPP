@@ -276,7 +276,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     if str(presence['muc']['jid']) in self.presences:
       self.presences[str(presence['muc']['jid'])] = presence['muc']['show']
-      if presence['muc']['jid'] == 'chat' or presence['muc']['jid'] == 'away':
+      if presence['muc']['show'] == 'chat' or presence['muc']['show'] == 'away':
         self.sendGameList(presence['muc']['jid'])
         self.relayBoardListRequest(presence['muc']['jid'])    
 
