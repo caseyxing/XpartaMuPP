@@ -361,6 +361,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             logging.error("Failed to process changestate data. Trying to add game")
             try:
               self.gameList.addGame(iq['from'], iq['gamelist']['game'])
+              self.sendGameList()
             except:
               pass
         else:
