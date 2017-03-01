@@ -448,9 +448,9 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     self.room = room
     self.nick = nick
     self.ratingListCache = {}
-    self.ratingCacheReload = False
+    self.ratingCacheReload = True
     self.boardListCache = {}
-    self.boardCacheReload = False
+    self.boardCacheReload = True
 
     # Init leaderboard object
     self.leaderboard = LeaderboardList(room)
