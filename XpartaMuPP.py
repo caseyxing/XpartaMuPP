@@ -283,7 +283,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if self.nicks[JID] == nick:
         logging.error(JID)
         self.presences[JID] = str(presence['type'])
-        if presence[JID] == 'available' or presence[JID] == 'away':
+        if self.presences[JID] == 'available' or self.presences[JID] == 'away':
           self.sendGameList(JID)
           self.relayBoardListRequest(JID)
         break
@@ -406,7 +406,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     iq = self.Iq()
     iq['type'] = 'result'
     iq.setPayload(stz)
-    
     if to == "":
       for JID in list(self.presences):
         if self.presences[JID] != "available" or self.presences[JID] != "away":
