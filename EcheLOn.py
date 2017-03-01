@@ -605,7 +605,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
-    for i in boardListCache:
+    for i in self.boardListCache:
       stz.addItem(board[i]['name'], board[i]['rating'])
     stz.addCommand('boardlist')
     stz.addRecipient(recipient)
