@@ -270,7 +270,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
 
-  def presence_chance(self, presence):
+  def presence_change(self, presence):
     """
     Processes presence change
     """
