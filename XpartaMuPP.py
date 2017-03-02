@@ -292,97 +292,101 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     if iq['type'] == 'error':
       logging.error('iqhandler error' + iq['error']['condition'])
-      #self.disconnect()
-    elif iq['type'] == 'get':
-      """
-      Request lists.
-      """
-      # Send lists/register on leaderboard; depreciated once muc_online
-      #  can send lists/register automatically on joining the room.
-      if list(iq.plugins.items())[0][0][0] == 'gamelist':
-        try:
-          self.sendGameList(iq['from'])
-        except:
-          traceback.print_exc()
-          logging.error("Failed to process gamelist request from %s" % iq['from'].bare)
-      elif list(iq.plugins.items())[0][0][0] == 'boardlist':
-        command = iq['boardlist']['command']
-        try:
-          self.relayBoardListRequest(iq['from'])
-        except:
-          traceback.print_exc()
-          logging.error("Failed to process leaderboardlist request from %s" % iq['from'].bare)
-      elif list(iq.plugins.items())[0][0][0] == 'profile':
-        command = iq['profile']['command']
-        try:
-          self.relayProfileRequest(iq['from'], command)
-        except:
+      return
+    
+    try:
+      command = list(iq.plugins.items())[0][0][0] 
+      if iq['type'] == 'get':
+        """
+        Request lists.
+        """
+        # Send lists/register on leaderboard; depreciated once muc_online
+        #  can send lists/register automatically on joining the room.
+        if command == 'gamelist':
+          try:
+            self.sendGameList(iq['from'])
+          except:
+            traceback.print_exc()
+            logging.error("Failed to process gamelist request from %s" % iq['from'].bare)
+        elif command == 'boardlist':
+          command = iq['boardlist']['command']
+          try:
+            self.relayBoardListRequest(iq['from'])
+          except:
+            traceback.print_exc()
+            logging.error("Failed to process leaderboardlist request from %s" % iq['from'].bare)
+        elif command == 'profile':
+          command = iq['profile']['command']
+          try:
+            self.relayProfileRequest(iq['from'], command)
+          except:
+            pass
+        else:
+          logging.error("Unknown 'get' type stanza request from %s" % iq['from'].bare)
+      elif iq['type'] == 'result':
+        """
+        Iq successfully received
+        """
+        command = command
+        if command == 'boardlist':
+          recipient = iq['boardlist']['recipient']
+          self.relayBoardList(iq['boardlist'], recipient)
+        elif command == 'profile':
+          recipient = iq['profile']['recipient']
+          player =  iq['profile']['command']
+          self.relayProfile(iq['profile'], player, recipient)
+        else:
           pass
-      else:
-        logging.error("Unknown 'get' type stanza request from %s" % iq['from'].bare)
-    elif iq['type'] == 'result':
-      """
-      Iq successfully received
-      """
-      if list(iq.plugins.items())[0][0][0] == 'boardlist':
-        recipient = iq['boardlist']['recipient']
-        self.relayBoardList(iq['boardlist'], recipient)
-      elif list(iq.plugins.items())[0][0][0] == 'profile':
-        recipient = iq['profile']['recipient']
-        player =  iq['profile']['command']
-        self.relayProfile(iq['profile'], player, recipient)
-      else:
-        pass
-    elif iq['type'] == 'set':
-      if list(iq.plugins.items())[0][0][0] == 'gamelist':
-        """
-        Register-update / unregister a game
-        """
-        command = iq['gamelist']['command']
-        if command == 'register':
-          # Add game
-          try:
-            if iq['from'] in self.nicks:
-              self.gameList.addGame(iq['from'], iq['gamelist']['game'])
-              self.sendGameList()
-          except:
-            traceback.print_exc()
-            logging.error("Failed to process game registration data")
-        elif command == 'unregister':
-          # Remove game
-          try:
-            self.gameList.removeGame(iq['from'])
-            self.sendGameList()
-          except:
-            traceback.print_exc()
-            logging.error("Failed to process game unregistration data")
-
-        elif command == 'changestate':
-          # Change game status (waiting/running)
-          try:
-            self.gameList.changeGameState(iq['from'], iq['gamelist']['game'])
-            self.sendGameList()
-          except:
-            traceback.print_exc()
-            logging.error("Failed to process changestate data. Trying to add game")
+      elif iq['type'] == 'set':
+        if command == 'gamelist':
+          """
+          Register-update / unregister a game
+          """
+          command = iq['gamelist']['command']
+          if command == 'register':
+            # Add game
             try:
               if iq['from'] in self.nicks:
                 self.gameList.addGame(iq['from'], iq['gamelist']['game'])
                 self.sendGameList()
             except:
-              pass
-        else:
-          logging.error("Failed to process command '%s' received from %s" % command, iq['from'].bare)
-      elif list(iq.plugins.items())[0][0][0] == 'gamereport':
-        """
-        Client is reporting end of game statistics
-        """
-        try:
-          self.relayGameReport(iq['gamereport'], iq['from'])
-        except:
-          traceback.print_exc()
-          logging.error("Failed to update game statistics for %s" % iq['from'].bare)
-    else:
+              traceback.print_exc()
+              logging.error("Failed to process game registration data")
+          elif command == 'unregister':
+            # Remove game
+            try:
+              self.gameList.removeGame(iq['from'])
+              self.sendGameList()
+            except:
+              traceback.print_exc()
+              logging.error("Failed to process game unregistration data")
+
+          elif command == 'changestate':
+            # Change game status (waiting/running)
+            try:
+              self.gameList.changeGameState(iq['from'], iq['gamelist']['game'])
+              self.sendGameList()
+            except:
+              traceback.print_exc()
+              logging.error("Failed to process changestate data. Trying to add game")
+              try:
+                if iq['from'] in self.nicks:
+                  self.gameList.addGame(iq['from'], iq['gamelist']['game'])
+                  self.sendGameList()
+              except:
+                pass
+          else:
+            logging.error("Failed to process command '%s' received from %s" % command, iq['from'].bare)
+        elif command == 'gamereport':
+          """
+          Client is reporting end of game statistics
+          """
+          try:
+            self.relayGameReport(iq['gamereport'], iq['from'])
+          except:
+            traceback.print_exc()
+            logging.error("Failed to update game statistics for %s" % iq['from'].bare)
+    except:
        logging.error("Failed to process stanza type '%s' received from %s" % iq['type'], iq['from'].bare)
 
   def sendGameList(self, to = ""):
@@ -406,7 +410,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     iq.setPayload(stz)
     if to == "":
       for JID in list(self.presences):
-        if self.presences[JID] != "available" and self.presences[JID] != "away":
+        if self.presences[JID] == "busy":
           continue
         iq['to'] = JID
 
@@ -549,7 +553,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     if to == "":  
       # Rating List
       for JID in list(self.presences):
-        if self.presences[JID] != "available" and self.presences[JID] != "away":
+        if self.presences[JID] == "busy":
           continue
         ## Set additional IQ attributes
         iq['to'] = JID
