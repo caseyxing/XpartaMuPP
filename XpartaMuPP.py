@@ -278,6 +278,8 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     nick = str(presence['from']).replace(prefix, "")
     for JID in self.nicks:
       if self.nicks[JID] == nick:
+        # Send them an update if they came back from busy;
+        # Otherwise, they can remain blissfully ignorant.
         if self.presences[JID] == 'busy' and (str(presence['type']) == "available" or str(presence['type']) == "away"):
           self.sendGameList(JID)
           self.relayBoardListRequest(JID)
@@ -295,13 +297,14 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       return
     
     try:
+      # New format specified by SleekXMPP 1.3.1+
       command = list(iq.plugins.items())[0][0][0] 
       if iq['type'] == 'get':
         """
         Request lists.
         """
-        # Send lists/register on leaderboard; depreciated once muc_online
-        #  can send lists/register automatically on joining the room.
+        # Send lists/register on leaderboard; depreciated once
+        # XEP-0060 is implemented
         if command == 'gamelist':
           try:
             self.sendGameList(iq['from'])
@@ -369,7 +372,11 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             except:
               traceback.print_exc()
               logging.error("Failed to process changestate data. Trying to add game")
+              # Useful for reboots. Requires the host to send a changestate and the
+              # game will be readded to the gamelist.
               try:
+                # Don't add if host if not online (race conditions may be the cause
+                # of 'ghost' games.
                 if iq['from'] in self.nicks:
                   self.gameList.addGame(iq['from'], iq['gamelist']['game'])
                   self.sendGameList()

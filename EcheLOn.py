@@ -599,11 +599,12 @@ class EcheLOn(sleekxmpp.ClientXMPP):
       If no target is passed the boardlist is broadcasted
         to all clients.
     """
-    ## Pull board list data and add it to the stanza 
+    ## See if we can squeak by with the cached version.
+    # Leaderboard cache is reloaded upon a new rated game being rated.
     if self.boardCacheReload:
       self.boardListCache = self.leaderboard.getBoard()
       self.boardCacheReload = False
-    ## Pull leaderboard data and add it to the stanza
+
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
@@ -628,7 +629,9 @@ class EcheLOn(sleekxmpp.ClientXMPP):
     """
       Send the rating list.
     """
-    ## Pull rating list data and add it to the stanza 
+    ## Attempt to use the cache.
+    # Cache is invalidated when a new game is rated or a uncached player
+    # comes online.
     if self.ratingCacheReload:
       self.ratingListCache = self.leaderboard.getRatingList(self.nicks)
       self.ratingCacheReload = False
@@ -638,6 +641,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
           self.ratingListCache = self.leaderboard.getRatingList(self.nicks)
           self.ratingCacheReload = False
           break
+
     stz = BoardListXmppPlugin()
     iq = self.Iq()
     iq['type'] = 'result'
