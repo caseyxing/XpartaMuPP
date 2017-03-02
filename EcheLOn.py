@@ -253,6 +253,7 @@ class LeaderboardList():
     for rank, player in enumerate(players):
       board[player.jid] = {'name': '@'.join(player.jid.split('@')[:-1]), 'rating': str(player.rating)}
     return board
+
   def getRatingList(self, nicks):
     """
     Returns a rating list of players
@@ -368,6 +369,7 @@ class ReportManager():
         return len(rawGameReport[key].split(","))-1
     # Return -1 in case of failure.
     return -1
+
 ## Class for custom player stanza extension ##
 class PlayerXmppPlugin(ElementBase):
   name = 'query'
@@ -537,7 +539,6 @@ class EcheLOn(sleekxmpp.ClientXMPP):
         recipient = iq['boardlist']['recipient']
         if command == 'getleaderboard':
           try:
-            self.leaderboard.getOrCreatePlayer(iq['from'])
             self.sendBoardList(iq['from'], recipient)
           except:
             traceback.print_exc()
@@ -572,6 +573,7 @@ class EcheLOn(sleekxmpp.ClientXMPP):
         Client is reporting end of game statistics
         """
         try:
+          self.leaderboard.getOrCreatePlayer(iq['gamereport']['sender'])
           self.reportManager.addReport(iq['gamereport']['sender'], iq['gamereport']['game'])
           if self.leaderboard.getLastRatedMessage() != "":
             self.ratingCacheReload = True

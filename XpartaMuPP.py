@@ -342,8 +342,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         if command == 'register':
           # Add game
           try:
-            self.gameList.addGame(iq['from'], iq['gamelist']['game'])
-            self.sendGameList()
+            if iq['from'] in self.nicks:
+              self.gameList.addGame(iq['from'], iq['gamelist']['game'])
+              self.sendGameList()
           except:
             traceback.print_exc()
             logging.error("Failed to process game registration data")
@@ -365,8 +366,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             traceback.print_exc()
             logging.error("Failed to process changestate data. Trying to add game")
             try:
-              self.gameList.addGame(iq['from'], iq['gamelist']['game'])
-              self.sendGameList()
+              if iq['from'] in self.nicks:
+                self.gameList.addGame(iq['from'], iq['gamelist']['game'])
+                self.sendGameList()
             except:
               pass
         else:
