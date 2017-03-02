@@ -63,7 +63,7 @@ class GameList():
       self.gameList[JID]['nbp'] = data['nbp']
       self.gameList[JID]['players'] = data['players']
       if 'startTime' not in self.gameList[JID]: 
-       self.gameList[JID]['startTime'] = str(round(time.time())) 
+        self.gameList[JID]['startTime'] = str(round(time.time())) 
 
 ## Class for custom player stanza extension ##
 class PlayerXmppPlugin(ElementBase):
