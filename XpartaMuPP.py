@@ -298,13 +298,13 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     
     try:
       # New format specified by SleekXMPP 1.3.1+
-      iq_attribute = list(iq.plugins.items())[0][0][0] 
       if iq['type'] == 'get':
         """
         Request lists.
         """
         # Send lists/register on leaderboard; depreciated once
         # XEP-0060 is implemented
+        iq_attribute = list(iq.plugins.items())[0][0][0] 
         if iq_attribute == 'gamelist':
           try:
             self.sendGameList(iq['from'])
@@ -330,6 +330,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         """
         Iq successfully received
         """
+        iq_attribute = list(iq.plugins.items())[0][0][0] 
         command = iq_attribute
         if iq_attribute == 'boardlist':
           recipient = iq['boardlist']['recipient']
@@ -341,6 +342,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         else:
           pass
       elif iq['type'] == 'set':
+        iq_attribute = list(iq.plugins.items())[0][0][0] 
         if iq_attribute == 'gamelist':
           """
           Register-update / unregister a game
