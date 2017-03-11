@@ -318,7 +318,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           except:
             traceback.print_exc()
             logging.error("Failed to process leaderboardlist request from %s" % iq['from'].bare)
-        elif command == 'profile':
+        elif iq_attribute == 'profile':
           command = iq['profile']['command']
           try:
             self.relayProfileRequest(iq['from'], command)
