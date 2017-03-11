@@ -298,20 +298,20 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     
     try:
       # New format specified by SleekXMPP 1.3.1+
-      command = list(iq.plugins.items())[0][0][0] 
+      iq_attribute = list(iq.plugins.items())[0][0][0] 
       if iq['type'] == 'get':
         """
         Request lists.
         """
         # Send lists/register on leaderboard; depreciated once
         # XEP-0060 is implemented
-        if command == 'gamelist':
+        if iq_attribute == 'gamelist':
           try:
             self.sendGameList(iq['from'])
           except:
             traceback.print_exc()
             logging.error("Failed to process gamelist request from %s" % iq['from'].bare)
-        elif command == 'boardlist':
+        elif iq_attribute == 'boardlist':
           command = iq['boardlist']['command']
           try:
             self.relayBoardListRequest(iq['from'])
@@ -330,23 +330,23 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         """
         Iq successfully received
         """
-        command = command
-        if command == 'boardlist':
+        command = iq_attribute
+        if iq_attribute == 'boardlist':
           recipient = iq['boardlist']['recipient']
           self.relayBoardList(iq['boardlist'], recipient)
-        elif command == 'profile':
+        elif iq_attribute == 'profile':
           recipient = iq['profile']['recipient']
           player =  iq['profile']['command']
           self.relayProfile(iq['profile'], player, recipient)
         else:
           pass
       elif iq['type'] == 'set':
-        if command == 'gamelist':
+        if iq_attribute == 'gamelist':
           """
           Register-update / unregister a game
           """
           command = iq['gamelist']['command']
-          if command == 'register':
+          if iq_attribute == 'register':
             # Add game
             try:
               if iq['from'] in self.nicks:
@@ -355,7 +355,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
             except:
               traceback.print_exc()
               logging.error("Failed to process game registration data")
-          elif command == 'unregister':
+          elif iq_attribute == 'unregister':
             # Remove game
             try:
               self.gameList.removeGame(iq['from'])
@@ -364,7 +364,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
               traceback.print_exc()
               logging.error("Failed to process game unregistration data")
 
-          elif command == 'changestate':
+          elif iq_attribute == 'changestate':
             # Change game status (waiting/running)
             try:
               self.gameList.changeGameState(iq['from'], iq['gamelist']['game'])
@@ -384,7 +384,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                 pass
           else:
             logging.error("Failed to process command '%s' received from %s" % command, iq['from'].bare)
-        elif command == 'gamereport':
+        elif iq_attribute == 'gamereport':
           """
           Client is reporting end of game statistics
           """
