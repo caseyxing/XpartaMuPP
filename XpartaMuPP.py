@@ -272,61 +272,12 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     if presence['muc']['nick'] == self.ratingsBot:
       self.ratingsBotWarned = False
 
-  def handle_commands(self, msg, reply_to, msg_type):
+  def private_message(self, msg):
     """
-    Parse commands
+    Processes private messages.
     """
-    speaker_jid = self.get_jid(msg['mucnick'], False)
-    lowercase_message = msg['body'].lower()
-    if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
-                                              self.affiliations[speaker_jid] == "admin"):
-      if len(lowercase_message.split(" ")) == 2:
-        muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick, True);
-        muted_full_jid = self.get_jid(muted_nick, False);
-        if muted_nick == self.nick:
-          self.send_message(mto=reply_to,
-                            mbody="I refuse to mute myself!",
-                            mtype=msg_type)
-        if muted_jid is None:
-          self.send_message(mto=reply_to,
-                            mbody="Unknown user.",
-                            mtype='groupchat')
-        elif self.affiliations[muted_full_jid] == "owner" or self.affiliations[muted_full_jid] == "admin":
-          self.send_message(mto=reply_to,
-                            mbody="You cannot mute a moderator.",
-                            mtype=msg_type)
-        else:
-          self.muted.add(muted_jid)
-          self.setRole(self.room, muted_full_jid, None, 'visitor', '', None)
-          self.send_message(mto=reply_to,
-                            mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
-                            mtype=msg_type)
-      else:
-        self.send_message(mto=reply_to,
-                          mbody="Invalid syntax.",
-                          mtype=msg_type)
-    elif lowercase_message[:8] == "@unmute " and (self.affiliations[speaker_jid] == "owner" or
-                                                  self.affiliations[speaker_jid] == "admin"):
-      if len(lowercase_message.split(" ")) == 2:
-        muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick, True);
-        muted_full_jid = self.get_jid(muted_nick, False);
-        if muted_jid in self.muted:
-          self.muted.remove(muted_jid)
-          self.setRole(self.room, muted_full_jid, None, 'participant', '', None)
-          self.send_message(mto=reply_to,
-                            mbody="[MODERATION] " + muted_nick + " has been unmuted by " + msg['mucnick'],
-                            mtype='groupchat')
-        else:
-          self.send_message(mto=reply_to,
-                            mbody=muted_nick + " is not currently muted.",
-                            mtype=msg_type)
-      else:
-        self.send_message(mto=reply_to,
-                          mbody="Invalid syntax.",
-                          mtype=msg_type)
-    elif lowercase_message[:10] == "@mutelist " and (self.affiliations[speaker_jid] == "owner" or
+
+    if lowercase_message[:10] == "@mutelist " and (self.affiliations[speaker_jid] == "owner" or
                                                   self.affiliations[speaker_jid] == "admin"):
       muted_nicks = "Users currently muted:"
       for jid in self.muted:
@@ -334,13 +285,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       self.send_message(mto=speaker_jid,
                         mbody=muted_nicks,
                         mtype='chat')
-
-  def private_message(self, msg):
-    """
-    Processes private messages.
-    """
-
-    self.handle_commands(msg, self.get_jid(msg['mucnick'], False), 'chat')
 
   def muc_message(self, msg):
     """
@@ -354,7 +298,55 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
 
-    self.handle_commands(msg, msg['from'].bare, 'groupchat')
+    speaker_jid = self.get_jid(msg['mucnick'], False)
+    if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
+                                              self.affiliations[speaker_jid] == "admin"):
+      if len(lowercase_message.split(" ")) == 2:
+        muted_nick = lowercase_message.split(" ")[1];
+        muted_jid = self.get_jid(muted_nick, True);
+        muted_full_jid = self.get_jid(muted_nick, False);
+        if muted_nick == self.nick:
+          self.send_message(mto=msg['from'].bare,
+                            mbody="I refuse to mute myself!",
+                            mtype='groupchat')
+        if muted_jid is None:
+          self.send_message(mto=msg['from'].bare,
+                            mbody="Unknown user.",
+                            mtype='groupchat')
+        elif self.affiliations[muted_full_jid] == "owner" or self.affiliations[muted_full_jid] == "admin":
+          self.send_message(mto=msg['from'].bare,
+                            mbody="You cannot mute a moderator.",
+                            mtype='groupchat')
+        else:
+          self.muted.add(muted_jid)
+          self.setRole(self.room, muted_full_jid, None, 'visitor', '', None)
+          self.send_message(mto=msg['from'].bare,
+                            mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
+                            mtype='groupchat')
+      else:
+        self.send_message(mto=msg['from'].bare,
+                          mbody="Invalid syntax.",
+                          mtype='groupchat')
+    elif lowercase_message[:8] == "@unmute " and (self.affiliations[speaker_jid] == "owner" or
+                                                  self.affiliations[speaker_jid] == "admin"):
+      if len(lowercase_message.split(" ")) == 2:
+        muted_nick = lowercase_message.split(" ")[1];
+        muted_jid = self.get_jid(muted_nick, True);
+        muted_full_jid = self.get_jid(muted_nick, False);
+        if muted_jid in self.muted:
+          self.muted.remove(muted_jid)
+          self.setRole(self.room, muted_full_jid, None, 'participant', '', None)
+          self.send_message(mto=msg['from'].bare,
+                            mbody="[MODERATION] " + muted_nick + " has been unmuted by " + msg['mucnick'],
+                            mtype='groupchat')
+        else:
+          self.send_message(mto=msg['from'].bare,
+                            mbody=muted_nick + " is not currently muted.",
+                            mtype='groupchat')
+      else:
+        self.send_message(mto=msg['from'].bare,
+                          mbody="Invalid syntax.",
+                          mtype='groupchat')
     
   def get_jid(self, nick, strip_resource):
     """
