@@ -241,7 +241,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         self.presences[jid] = "available"
         self.affiliations[jid] = presence['muc']['affiliation'];
         if jid in self.muted:
-          setRole(self, self.room, jid, None, 'visitor', '', None)
+          self.setRole(self, self.room, jid, None, 'visitor', '', None)
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
@@ -280,16 +280,16 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
 
-    speaker_jid = get_jid(msg['mucnick'])
+    speaker_jid = self.get_jid(msg['mucnick'])
     if lowercase_message[:5] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
-        self.muted.add(get_jid(muted_nick))
+        self.muted.add(self.get_jid(muted_nick))
         self.send_message(mto=msg['from'].bare,
                           mbody=muted_nick + " has been muted by " + speaker_jid,
                           mtype='groupchat')
-        setRole(self, self.room, get_jid(muted_nick), None, 'visitor', '', None)
+        setRole(self, self.room, self.get_jid(muted_nick), None, 'visitor', '', None)
       else:
         self.send_message(mto=msg['from'].bare,
                           mbody="Invalid syntax.",
