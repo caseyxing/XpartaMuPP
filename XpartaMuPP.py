@@ -277,6 +277,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     Parse commands
     """
     speaker_jid = self.get_jid(msg['mucnick'], False)
+    lowercase_message = msg['body'].lower()
     if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
