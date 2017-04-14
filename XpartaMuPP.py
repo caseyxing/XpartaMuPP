@@ -287,7 +287,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         muted_nick = lowercase_message.split(" ")[1];
         self.muted.add(self.get_jid(muted_nick))
         self.send_message(mto=msg['from'].bare,
-                          mbody=muted_nick + " has been muted by " + msg['mucnick'],
+                          mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
                           mtype='groupchat')
         self.setRole(self.room, self.get_jid(muted_nick), None, 'visitor', '', None)
       else:
@@ -331,7 +331,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
      ritem = ET.SubElement(item, 'reason')
      ritem.text=reason
      query.append(item)
-     iq = self.xmpp.makeIqSet(query)
+     iq = self.makeIqSet(query)
      iq['to'] = room
      iq['from'] = ifrom
      # For now, swallow errors to preserve existing API
