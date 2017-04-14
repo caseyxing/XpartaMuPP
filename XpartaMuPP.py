@@ -286,7 +286,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
         muted_jid = self.get_jid(muted_nick);
-        if muted_sjid == self.sjid:
+        if muted_jid == self.sjid:
           self.send_message(mto=msg['from'].bare,
                             mbody="I refuse to mute myself!",
                             mtype='groupchat')
