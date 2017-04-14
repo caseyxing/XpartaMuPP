@@ -320,7 +320,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.muted.add(muted_jid)
           self.setRole(self.room, muted_full_jid, None, 'visitor', '', None)
           self.send_message(mto=msg['from'].bare,
-                            mbody=muted_nick + " has been muted by " + msg['mucnick'],
+                            mbody=muted_nick + " has been muted by " + msg['mucnick'] + ".",
                             mtype='groupchat')
       else:
         self.send_message(mto=msg['from'].bare,
@@ -336,7 +336,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.muted.remove(muted_jid)
           self.setRole(self.room, muted_full_jid, None, 'participant', '', None)
           self.send_message(mto=msg['from'].bare,
-                            mbody=muted_nick + " has been unmuted by " + msg['mucnick'],
+                            mbody=muted_nick + " has been unmuted by " + msg['mucnick'] + ".",
                             mtype='groupchat')
         else:
           self.send_message(mto=msg['from'].bare,
