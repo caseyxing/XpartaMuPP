@@ -280,7 +280,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     if lowercase_message == "@mutelist":
       muted_nicks = "Users currently muted:"
       for jid in self.muted:
-        muted_nicks += " " + jid
+        muted_nicks += " " + jid.split("@")[0]
       self.send_message(mto=msg['from'],
                         mbody=muted_nicks,
                         mtype='chat')
