@@ -281,7 +281,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                         mtype='groupchat')
 
     speaker_jid = self.get_jid(msg['mucnick'])
-    if lowercase_message[:5] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
+    if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
@@ -289,7 +289,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         self.send_message(mto=msg['from'].bare,
                           mbody=muted_nick + " has been muted by " + speaker_jid,
                           mtype='groupchat')
-        setRole(self, self.room, self.get_jid(muted_nick), None, 'visitor', '', None)
+        self.setRole(self, self.room, self.get_jid(muted_nick), None, 'visitor', '', None)
       else:
         self.send_message(mto=msg['from'].bare,
                           mbody="Invalid syntax.",
