@@ -243,7 +243,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         self.affiliations[jid] = presence['muc']['affiliation'];
         if jid.split("/")[0] in self.muted:
           self.setRole(self.room, jid, None, 'visitor', '', None)
-          self.send_message(mto=jid,
+          self.send_message(mto=self.room + "/" + presence['muc']['nick'],
                             mbody="You are currently muted.",
                             mtype='chat')
       # Check the jid isn't already in the lobby.
