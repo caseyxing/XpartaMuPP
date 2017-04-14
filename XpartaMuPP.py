@@ -276,7 +276,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     Processes private messages.
     """
-
+    lowercase_message = msg['body'].lower()
     if lowercase_message[:10] == "@mutelist " and (self.affiliations[speaker_jid] == "owner" or
                                                   self.affiliations[speaker_jid] == "admin"):
       muted_nicks = "Users currently muted:"
