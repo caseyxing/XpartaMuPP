@@ -285,11 +285,37 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
-        self.muted.add(self.get_jid(muted_nick))
+        muted_jid = self.get_jid(muted_nick);
+        if self.affiliates[muted_jid] == "owner" or self.affiliates[muted_jid] == "admin":
+          self.send_message(mto=msg['from'].bare,
+                            mbody="You cannot mute a moderator.",
+                            mtype='groupchat')
+        else:
+          self.muted.add(muted_jid)
+          self.send_message(mto=msg['from'].bare,
+                            mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
+                            mtype='groupchat')
+          self.setRole(self.room, muted_jid, None, 'visitor', '', None)
+      else:
         self.send_message(mto=msg['from'].bare,
-                          mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
+                          mbody="Invalid syntax.",
                           mtype='groupchat')
-        self.setRole(self.room, self.get_jid(muted_nick), None, 'visitor', '', None)
+    elif lowercase_message[:8] == "@unmute " and (self.affiliations[speaker_jid] == "owner" or
+                                              self.affiliations[speaker_jid] == "admin"):
+      if len(lowercase_message.split(" ")) == 2:
+        muted_nick = lowercase_message.split(" ")[1];
+        muted_jid = self.get_jid(muted_nick);
+        if muted_jid in self.muted:
+          self.muted.remove(muted_jid)
+          self.send_message(mto=msg['from'].bare,
+                            mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
+                            mtype='groupchat')
+          self.setRole(self.room, muted_jid, None, 'participant', '', None)
+        else:
+          
+          self.send_message(mto=msg['from'].bare,
+                            mbody=muted_nick + " is not currently muted.",
+                            mtype='groupchat')
       else:
         self.send_message(mto=msg['from'].bare,
                           mbody="Invalid syntax.",
