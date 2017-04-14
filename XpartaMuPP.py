@@ -26,8 +26,6 @@ from sleekxmpp.xmlstream import ElementBase, register_stanza_plugin, ET
 from sleekxmpp.xmlstream.handler import Callback
 from sleekxmpp.xmlstream.matcher import StanzaPath
 
-from sets import Set
-
 ## Class to tracks all games in the lobby ##
 class GameList():
   def __init__(self):
@@ -182,7 +180,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     self.nicks = {}
     self.presences = {} # Obselete when XEP-0060 is implemented.
     self.affiliations = {}
-    self.muted = Set()
+    self.muted = set()
 
     self.lastLeft = ""
 
