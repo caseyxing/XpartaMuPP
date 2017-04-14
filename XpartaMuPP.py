@@ -337,7 +337,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if self.nicks[jid].lower() == nick.lower():
         if strip_resource:
           return jid.split("/")[0]
-        else
+        else:
           return jid
     return None
 
