@@ -241,7 +241,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         self.presences[jid] = "available"
         self.affiliations[jid] = presence['muc']['affiliation'];
         if jid in self.muted:
-          self.setRole(self, self.room, jid, None, 'visitor', '', None)
+          self.setRole(self.room, jid, None, 'visitor', '', None)
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
