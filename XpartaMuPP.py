@@ -179,6 +179,8 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     # Store mapping of nicks and XmppIDs, attached via presence stanza
     self.nicks = {}
     self.presences = {} # Obselete when XEP-0060 is implemented.
+    self.affiliations = {}
+    self.muted = Set()
 
     self.lastLeft = ""
 
@@ -233,9 +235,13 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     self.relayPlayerOnline(presence['muc']['jid'])
     if presence['muc']['nick'] != self.nick:
       # If it doesn't already exist, store player JID mapped to their nick.
-      if str(presence['muc']['jid']) not in self.nicks:
-        self.nicks[str(presence['muc']['jid'])] = presence['muc']['nick']
-        self.presences[str(presence['muc']['jid'])] = "available"
+      jid = str(presence['muc']['jid'])
+      if jid not in self.nicks:
+        self.nicks[jid] = presence['muc']['nick']
+        self.presences[jid] = "available"
+        self.affiliations[jid] = presence['muc']['affiliation'];
+        if jid in self.muted:
+          setRole(self, self.room, jid, None, 'visitor', '', None)
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
@@ -258,6 +264,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if str(presence['muc']['jid']) in self.nicks:
         del self.nicks[str(presence['muc']['jid'])]
         del self.presences[str(presence['muc']['jid'])]
+        del self.affiliations[str(presence['muc']['jid'])]
     if presence['muc']['nick'] == self.ratingsBot:
       self.ratingsBotWarned = False
 
@@ -265,10 +272,36 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     """
     Process new messages from the chatroom.
     """
-    if msg['mucnick'] != self.nick and self.nick.lower() in msg['body'].lower():
+    if msg['mucnick'] == self.nick:
+      return
+    lowercase_message = msg['body'].lower()
+    if self.nick.lower() in lowercase_message:
       self.send_message(mto=msg['from'].bare,
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
+
+    speaker_jid = get_jid(msg['mucnick'])
+    if lowercase_message[:5] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
+                                              self.affiliations[speaker_jid] == "admin"):
+      if len(lowercase_message.split(" ")) == 2:
+        muted_nick = lowercase_message.split(" ")[1];
+        self.muted.add(get_jid(muted_nick))
+        self.send_message(mto=msg['from'].bare,
+                          mbody=muted_nick + " has been muted by " + speaker_jid,
+                          mtype='groupchat')
+        setRole(self, self.room, get_jid(muted_nick), None, 'visitor', '', None)
+      else
+        self.send_message(mto=msg['from'].bare,
+                          mbody="Invalid syntax.",
+                          mtype='groupchat')
+    
+  def get_jid(self, nick):
+    """
+    Retrives the corresponding jid from a nick
+    """
+    for jid in self.nicks:
+      if self.nicks[jid].lower() == nick.lower():
+        return jid
 
   def presence_change(self, presence):
     """
@@ -283,6 +316,32 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.relayBoardListRequest(JID)
         self.presences[JID] = str(presence['type'])
         break
+
+  def setRole(self, room, jid=None, nick=None, role='participant', reason='',ifrom=None):
+     """
+     Alter room Role. Taken from https://github.com/fritzy/SleekXMPP/pull/161
+     """
+     if role not in ('none','visitor','participant','moderator'):
+       raise TypeError
+     query = ET.Element('{http://jabber.org/protocol/muc#admin}query')
+     if nick is not None:
+       item = ET.Element('item', {'role':role, 'nick':nick})
+     else:
+       item = ET.Element('item', {'role':role, 'jid':jid})
+     ritem = ET.SubElement(item, 'reason')
+     ritem.text=reason
+     query.append(item)
+     iq = self.xmpp.makeIqSet(query)
+     iq['to'] = room
+     iq['from'] = ifrom
+     # For now, swallow errors to preserve existing API
+     try:
+       result = iq.send()
+     except IqError:
+       return False
+     except IqTimeout:
+       return False
+     return True
  
 
   def iqhandler(self, iq):
