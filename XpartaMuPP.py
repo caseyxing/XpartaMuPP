@@ -322,6 +322,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.send_message(mto=msg['from'].bare,
                             mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
                             mtype='groupchat')
+          self.send_message(mto=self.room + "/" + muted_nick,
+                            mbody="You have been muted.",
+                            mtype='chat')
       else:
         self.send_message(mto=msg['from'].bare,
                           mbody="Invalid syntax.",
@@ -338,6 +341,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.send_message(mto=msg['from'].bare,
                             mbody="[MODERATION] " + muted_nick + " has been unmuted by " + msg['mucnick'],
                             mtype='groupchat')
+          self.send_message(mto=self.room + "/" + muted_nick,
+                            mbody="You have been unmuted.",
+                            mtype='chat')
         else:
           self.send_message(mto=msg['from'].bare,
                             mbody=muted_nick + " is not currently muted.",
