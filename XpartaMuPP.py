@@ -286,7 +286,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
         muted_jid = self.get_jid(muted_nick);
-        if self.affiliates[muted_jid] == "owner" or self.affiliates[muted_jid] == "admin":
+        if self.affiliations[muted_jid] == "owner" or self.affiliations[muted_jid] == "admin":
           self.send_message(mto=msg['from'].bare,
                             mbody="You cannot mute a moderator.",
                             mtype='groupchat')
