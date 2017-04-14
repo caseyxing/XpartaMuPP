@@ -280,12 +280,12 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
 
-    speaker_jid = self.get_jid(msg['mucnick'])
+    speaker_jid = self.get_jid(msg['mucnick'], False)
     if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick);
+        muted_jid = self.get_jid(muted_nick, True);
         if muted_nick == self.nick:
           self.send_message(mto=msg['from'].bare,
                             mbody="I refuse to mute myself!",
@@ -312,7 +312,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                                               self.affiliations[speaker_jid] == "admin"):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick);
+        muted_jid = self.get_jid(muted_nick, True);
         if muted_jid in self.muted:
           self.muted.remove(muted_jid)
           self.send_message(mto=msg['from'].bare,
@@ -329,13 +329,16 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                           mbody="Invalid syntax.",
                           mtype='groupchat')
     
-  def get_jid(self, nick):
+  def get_jid(self, nick, strip_resource):
     """
     Retrives the corresponding jid from a nick
     """
     for jid in self.nicks:
       if self.nicks[jid].lower() == nick.lower():
-        return jid.split("/")[0]
+        if strip_resource:
+          return jid.split("/")[0]
+        else
+          return jid
     return None
 
   def presence_change(self, presence):
