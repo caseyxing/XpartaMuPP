@@ -290,7 +290,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
                           mbody=muted_nick + " has been muted by " + speaker_jid,
                           mtype='groupchat')
         setRole(self, self.room, get_jid(muted_nick), None, 'visitor', '', None)
-      else
+      else:
         self.send_message(mto=msg['from'].bare,
                           mbody="Invalid syntax.",
                           mtype='groupchat')
