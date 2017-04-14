@@ -286,6 +286,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if len(lowercase_message.split(" ")) == 2:
         muted_nick = lowercase_message.split(" ")[1];
         muted_jid = self.get_jid(muted_nick, True);
+        muted_full_jid = self.get_jid(muted_nick, False);
         if muted_nick == self.nick:
           self.send_message(mto=msg['from'].bare,
                             mbody="I refuse to mute myself!",
@@ -294,7 +295,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
           self.send_message(mto=msg['from'].bare,
                             mbody="Unknown user.",
                             mtype='groupchat')
-        elif self.affiliations[muted_jid] == "owner" or self.affiliations[muted_jid] == "admin":
+        elif self.affiliations[muted_full_jid] == "owner" or self.affiliations[muted_full_jid] == "admin":
           self.send_message(mto=msg['from'].bare,
                             mbody="You cannot mute a moderator.",
                             mtype='groupchat')
