@@ -308,7 +308,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
         if muted_jid in self.muted:
           self.muted.remove(muted_jid)
           self.send_message(mto=msg['from'].bare,
-                            mbody="[MODERATION] " + muted_nick + " has been muted by " + msg['mucnick'],
+                            mbody="[MODERATION] " + muted_nick + " has been unmuted by " + msg['mucnick'],
                             mtype='groupchat')
           self.setRole(self.room, muted_jid, None, 'participant', '', None)
         else:
