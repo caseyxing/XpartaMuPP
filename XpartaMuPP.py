@@ -179,8 +179,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     # Store mapping of nicks and XmppIDs, attached via presence stanza
     self.nicks = {}
     self.presences = {} # Obselete when XEP-0060 is implemented.
-    self.affiliations = {}
-    self.muted = set()
 
     self.lastLeft = ""
 
@@ -215,7 +213,6 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     self.add_event_handler("muc::%s::got_online" % self.room, self.muc_online)
     self.add_event_handler("muc::%s::got_offline" % self.room, self.muc_offline)
     self.add_event_handler("groupchat_message", self.muc_message)
-    self.add_event_handler('message', self.private_message)
     self.add_event_handler("changed_status", self.presence_change)
 
   def start(self, event):
@@ -236,16 +233,9 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     self.relayPlayerOnline(presence['muc']['jid'])
     if presence['muc']['nick'] != self.nick:
       # If it doesn't already exist, store player JID mapped to their nick.
-      jid = str(presence['muc']['jid'])
-      if jid not in self.nicks:
-        self.nicks[jid] = presence['muc']['nick']
-        self.presences[jid] = "available"
-        self.affiliations[jid] = presence['muc']['affiliation'];
-        if jid.split("/")[0] in self.muted:
-          self.setRole(self.room, jid, None, 'visitor', '', None)
-          self.send_message(mto=self.room + "/" + presence['muc']['nick'],
-                            mbody="You are currently muted.",
-                            mtype='chat')
+      if str(presence['muc']['jid']) not in self.nicks:
+        self.nicks[str(presence['muc']['jid'])] = presence['muc']['nick']
+        self.presences[str(presence['muc']['jid'])] = "available"
       # Check the jid isn't already in the lobby.
       # Send Gamelist to new player.
       self.sendGameList(presence['muc']['jid'])
@@ -268,96 +258,17 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       if str(presence['muc']['jid']) in self.nicks:
         del self.nicks[str(presence['muc']['jid'])]
         del self.presences[str(presence['muc']['jid'])]
-        del self.affiliations[str(presence['muc']['jid'])]
     if presence['muc']['nick'] == self.ratingsBot:
       self.ratingsBotWarned = False
-
-  def private_message(self, msg):
-    """
-    Processes private messages.
-    """
-    lowercase_message = msg['body'].lower()
-    if lowercase_message == "@mutelist":
-      muted_nicks = "Users currently muted:"
-      for jid in self.muted:
-        muted_nicks += " " + jid.split("@")[0]
-      self.send_message(mto=msg['from'],
-                        mbody=muted_nicks,
-                        mtype='chat')
 
   def muc_message(self, msg):
     """
     Process new messages from the chatroom.
     """
-    if msg['mucnick'] == self.nick:
-      return
-    lowercase_message = msg['body'].lower()
-    if self.nick.lower() in lowercase_message:
+    if msg['mucnick'] != self.nick and self.nick.lower() in msg['body'].lower():
       self.send_message(mto=msg['from'].bare,
                         mbody="I am the administrative bot in this lobby and cannot participate in any games.",
                         mtype='groupchat')
-
-    speaker_jid = self.get_jid(msg['mucnick'], False)
-    if lowercase_message[:6] == "@mute " and (self.affiliations[speaker_jid] == "owner" or
-                                              self.affiliations[speaker_jid] == "admin"):
-      if len(lowercase_message.split(" ")) == 2:
-        muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick, True);
-        muted_full_jid = self.get_jid(muted_nick, False);
-        if muted_nick == self.nick:
-          self.send_message(mto=msg['from'].bare,
-                            mbody="I refuse to mute myself!",
-                            mtype='groupchat')
-        if muted_jid is None:
-          self.send_message(mto=msg['from'].bare,
-                            mbody="Unknown user.",
-                            mtype='groupchat')
-        elif self.affiliations[muted_full_jid] == "owner" or self.affiliations[muted_full_jid] == "admin":
-          self.send_message(mto=msg['from'].bare,
-                            mbody="You cannot mute a moderator.",
-                            mtype='groupchat')
-        else:
-          self.muted.add(muted_jid)
-          self.setRole(self.room, muted_full_jid, None, 'visitor', '', None)
-          self.send_message(mto=msg['from'].bare,
-                            mbody=muted_nick + " has been muted by " + msg['mucnick'] + ".",
-                            mtype='groupchat')
-      else:
-        self.send_message(mto=msg['from'].bare,
-                          mbody="Invalid syntax.",
-                          mtype='groupchat')
-    elif lowercase_message[:8] == "@unmute " and (self.affiliations[speaker_jid] == "owner" or
-                                                  self.affiliations[speaker_jid] == "admin"):
-      if len(lowercase_message.split(" ")) == 2:
-        muted_nick = lowercase_message.split(" ")[1];
-        muted_jid = self.get_jid(muted_nick, True);
-        muted_full_jid = self.get_jid(muted_nick, False);
-        if muted_jid in self.muted:
-          self.muted.remove(muted_jid)
-          self.setRole(self.room, muted_full_jid, None, 'participant', '', None)
-          self.send_message(mto=msg['from'].bare,
-                            mbody=muted_nick + " has been unmuted by " + msg['mucnick'] + ".",
-                            mtype='groupchat')
-        else:
-          self.send_message(mto=msg['from'].bare,
-                            mbody=muted_nick + " is not currently muted.",
-                            mtype='groupchat')
-      else:
-        self.send_message(mto=msg['from'].bare,
-                          mbody="Invalid syntax.",
-                          mtype='groupchat')
-    
-  def get_jid(self, nick, strip_resource):
-    """
-    Retrives the corresponding jid from a nick
-    """
-    for jid in self.nicks:
-      if self.nicks[jid].lower() == nick.lower():
-        if strip_resource:
-          return jid.split("/")[0]
-        else:
-          return jid
-    return None
 
   def presence_change(self, presence):
     """
@@ -367,37 +278,11 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
     nick = str(presence['from']).replace(prefix, "")
     for JID in self.nicks:
       if self.nicks[JID] == nick:
-        if self.presences[JID] == 'busy' and (str(presence['type']) == "available" or str(presence['type']) == "away"):
+        if self.presences[JID] == 'dnd' and (str(presence['type']) == "available" or str(presence['type']) == "away"):
           self.sendGameList(JID)
           self.relayBoardListRequest(JID)
         self.presences[JID] = str(presence['type'])
         break
-
-  def setRole(self, room, jid=None, nick=None, role='participant', reason='',ifrom=None):
-     """
-     Alter room Role. Taken from https://github.com/fritzy/SleekXMPP/pull/161
-     """
-     if role not in ('none','visitor','participant','moderator'):
-       raise TypeError
-     query = ET.Element('{http://jabber.org/protocol/muc#admin}query')
-     if nick is not None:
-       item = ET.Element('item', {'role':role, 'nick':nick})
-     else:
-       item = ET.Element('item', {'role':role, 'jid':jid})
-     ritem = ET.SubElement(item, 'reason')
-     ritem.text=reason
-     query.append(item)
-     iq = self.makeIqSet(query)
-     iq['to'] = room
-     iq['from'] = ifrom
-     # For now, swallow errors to preserve existing API
-     try:
-       result = iq.send()
-     except IqError:
-       return False
-     except IqTimeout:
-       return False
-     return True
  
 
   def iqhandler(self, iq):
