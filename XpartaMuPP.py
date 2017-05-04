@@ -299,13 +299,7 @@ class XpartaMuPP(sleekxmpp.ClientXMPP):
       """
       # Send lists/register on leaderboard; depreciated once muc_online
       #  can send lists/register automatically on joining the room.
-      if list(iq.plugins.items())[0][0][0] == 'gamelist':
-        try:
-          self.sendGameList(iq['from'])
-        except:
-          traceback.print_exc()
-          logging.error("Failed to process gamelist request from %s" % iq['from'].bare)
-      elif list(iq.plugins.items())[0][0][0] == 'boardlist':
+      if list(iq.plugins.items())[0][0][0] == 'boardlist':
         command = iq['boardlist']['command']
         try:
           self.relayBoardListRequest(iq['from'])
